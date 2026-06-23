@@ -41,12 +41,16 @@ struct PDFDeckApp: App {
                 Button("Set as Default PDF Viewer") { model.claimPDFDefault() }
             }
             CommandGroup(after: .toolbar) {   // inject into the existing View menu
+                Button("Single Page  (1)") { model.showSinglePage() }
+                Button("Multiple Pages  (2)") { model.showMultiplePages() }
+                Button("Hide / Show Panels  (f)") { model.toggleChrome() }
+                Button("Full Screen") { model.toggleFullscreen() }
+                    .keyboardShortcut("f", modifiers: .command)   // ⌘F
+                Divider()
                 Button("Zoom In") { model.zoomIn() }
-                    .keyboardShortcut("+", modifiers: .command)   // ⌘+ (also responds to ⌘=)
+                    .keyboardShortcut("+", modifiers: .command)
                 Button("Zoom Out") { model.zoomOut() }
                     .keyboardShortcut("-", modifiers: .command)
-                Button("Actual Size") { model.zoomActual() }
-                    .keyboardShortcut("1", modifiers: .command)
                 Button("Zoom to Fit") { model.zoomFit() }
                     .keyboardShortcut("0", modifiers: .command)
                 Divider()

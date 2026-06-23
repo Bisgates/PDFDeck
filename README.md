@@ -35,17 +35,18 @@ A fast, native macOS viewer for browsing **many large PDFs** across folders. Swi
 
 Selection styling matches macOS: the focused zone's selection is an accent fill; the unfocused zone's is grey.
 
-**View — single-key shortcuts**
+**View shortcuts**
 
 | Key | Action |
 |-----|--------|
-| `f` | hide / show the sidebar + thumbnails (page fills the window) |
 | `1` | single page, fit to window |
-| `2` | native macOS fullscreen |
+| `2` | multiple pages (continuous scroll) |
+| `f` | hide / show the sidebar + thumbnails (page fills the window) |
+| `⌘F` | native macOS fullscreen |
 | `esc` | exit fullscreen, then show the panels |
 | `=` `-` `0` | zoom in / out / fit (also ⌘± and trackpad pinch) |
 
-Combine `2` then `f` for a page-only fullscreen presentation. Dense pages (e.g. newspaper layouts) become readable by zooming; zoom resets to fit when you switch files.
+Combine `⌘F` then `f` for a page-only fullscreen presentation. Dense pages (e.g. newspaper layouts) become readable by zooming; zoom resets to fit when you switch files.
 
 ## Build & install
 

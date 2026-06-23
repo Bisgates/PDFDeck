@@ -296,8 +296,13 @@ final class AppModel: ObservableObject {
     // MARK: - View modes
 
     func toggleChrome()     { chromeHidden.toggle(); if chromeHidden { focusZone = .slides } }   // f
-    func toggleFullscreen() { fullscreen.toggle();   if fullscreen   { focusZone = .slides } }   // 2
-    func showSinglePage()   { pdfView.displayMode = .singlePage; pdfView.autoScales = true }     // 1
+    func toggleFullscreen() { fullscreen.toggle();   if fullscreen   { focusZone = .slides } }   // ⌘F
+    func showSinglePage() {                                                                       // 1
+        pdfView.displayMode = .singlePage; pdfView.displaysPageBreaks = false; pdfView.autoScales = true
+    }
+    func showMultiplePages() {                                                                    // 2
+        pdfView.displayMode = .singlePageContinuous; pdfView.displaysPageBreaks = true; pdfView.autoScales = true
+    }
     /// esc: unwind fullscreen, then panel-hiding. Returns true if it consumed the key.
     func escape() -> Bool {
         if fullscreen   { fullscreen = false; return true }

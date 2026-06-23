@@ -48,7 +48,7 @@ struct ContentView: View {
             if model.selectedID == nil && !model.chromeHidden {
                 ContentUnavailableView("No PDF selected",
                                        systemImage: "doc.richtext",
-                                       description: Text("1 single page · f hide panels · 2 fullscreen"))
+                                       description: Text("1 single · 2 multiple · f panels · ⌘F fullscreen"))
             }
             if model.isLoading {
                 ProgressView().controlSize(.large).padding(20)
@@ -105,9 +105,9 @@ struct ContentView: View {
             if let tv = NSApp.keyWindow?.firstResponder as? NSTextView, tv.isFieldEditor { return event }
             if event.modifierFlags.contains(.command) { return event }
             switch event.keyCode {
-            case 3:   model.toggleChrome();     return nil            // f  — hide sidebar + thumbnails
-            case 18:  model.showSinglePage();   return nil            // 1  — single page
-            case 19:  model.toggleFullscreen(); return nil            // 2  — native fullscreen
+            case 3:   model.toggleChrome();      return nil           // f  — hide sidebar + thumbnails
+            case 18:  model.showSinglePage();    return nil           // 1  — single page
+            case 19:  model.showMultiplePages(); return nil           // 2  — multiple pages (continuous)
             case 53:  return model.escape() ? nil : event             // esc — unwind fullscreen / panels
             case 123: model.arrowLeft();  return nil                  // ←
             case 124: model.arrowRight(); return nil                  // →
