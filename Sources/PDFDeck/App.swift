@@ -35,6 +35,17 @@ struct PDFDeckApp: App {
             CommandGroup(after: .appSettings) {
                 Button("Set as Default PDF Viewer") { model.claimPDFDefault() }
             }
+            CommandGroup(after: .toolbar) {   // inject into the existing View menu
+                Button("Zoom In") { model.zoomIn() }
+                    .keyboardShortcut("+", modifiers: .command)   // ⌘+ (also responds to ⌘=)
+                Button("Zoom Out") { model.zoomOut() }
+                    .keyboardShortcut("-", modifiers: .command)
+                Button("Actual Size") { model.zoomActual() }
+                    .keyboardShortcut("1", modifiers: .command)
+                Button("Zoom to Fit") { model.zoomFit() }
+                    .keyboardShortcut("0", modifiers: .command)
+                Divider()
+            }
         }
     }
 

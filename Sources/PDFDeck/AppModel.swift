@@ -37,6 +37,8 @@ final class AppModel: ObservableObject {
         v.autoScales = true
         v.interpolationQuality = .high
         v.backgroundColor = NSColor.textBackgroundColor
+        v.minScaleFactor = 0.2              // macOS PDFView handles trackpad pinch natively
+        v.maxScaleFactor = 8.0
         return v
     }()
     let thumbs = ThumbCache()
@@ -268,6 +270,7 @@ final class AppModel: ObservableObject {
                 self.thumbs.reset()           // drop previous document's thumbnails
                 self.document = doc
                 self.pdfView.document = doc
+                self.pdfView.autoScales = true   // new file resets to fit-window
                 self.pageCount = doc?.pageCount ?? 0
                 if let doc, restore < doc.pageCount, let p = doc.page(at: restore) {
                     self.pdfView.go(to: p); self.currentPage = restore
@@ -280,6 +283,13 @@ final class AppModel: ObservableObject {
 
     func nextPage() { if pdfView.canGoToNextPage { pdfView.goToNextPage(nil) } }
     func prevPage() { if pdfView.canGoToPreviousPage { pdfView.goToPreviousPage(nil) } }
+
+    // MARK: - Zoom
+
+    func zoomIn()    { if pdfView.canZoomIn { pdfView.zoomIn(nil) } }
+    func zoomOut()   { if pdfView.canZoomOut { pdfView.zoomOut(nil) } }
+    func zoomFit()   { pdfView.autoScales = true }
+    func zoomActual() { pdfView.autoScales = false; pdfView.scaleFactor = 1.0 }
     func goToPage(_ i: Int) {
         guard let p = document?.page(at: i) else { return }
         pdfView.go(to: p)

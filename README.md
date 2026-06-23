@@ -35,6 +35,8 @@ A fast, native macOS viewer for browsing **many large PDFs** across folders. Swi
 
 Selection styling matches macOS: the focused zone's selection is an accent fill; the unfocused zone's is grey.
 
+**Zoom** — trackpad pinch, or ⌘+ / ⌘− / ⌘0 (fit) / ⌘1 (actual size). Dense pages (e.g. newspaper layouts) become readable; zoom resets to fit when you switch files.
+
 ## Build & install
 
 Requires the Xcode toolchain, macOS 14+.
