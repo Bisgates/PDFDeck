@@ -2,34 +2,53 @@ import SwiftUI
 import PDFKit
 import AppKit
 
+/// Resolves the hosting NSWindow so we can drive native fullscreen.
+struct WindowAccessor: NSViewRepresentable {
+    let onResolve: (NSWindow?) -> Void
+    func makeNSView(context: Context) -> NSView {
+        let v = NSView()
+        DispatchQueue.main.async { onResolve(v.window) }
+        return v
+    }
+    func updateNSView(_ v: NSView, context: Context) {
+        DispatchQueue.main.async { onResolve(v.window) }
+    }
+}
+
 struct ContentView: View {
     @EnvironmentObject var model: AppModel
     @State private var keyMonitor: Any?
+    @State private var fsObservers: [NSObjectProtocol] = []
+    @State private var window: NSWindow?
 
     var body: some View {
-        NavigationSplitView {
-            Sidebar()
-                .navigationSplitViewColumnWidth(min: 200, ideal: 250, max: 380)
-        } detail: {
-            HStack(spacing: 0) {
-                ThumbnailList()
-                    .frame(width: 192)
+        HStack(spacing: 0) {
+            if !model.chromeHidden {
+                Sidebar()
+                    .frame(width: 250)
+                    .background(.bar)
                 Divider()
-                pageColumn
+                ThumbnailList().frame(width: 192)
+                Divider()
             }
+            pageColumn
         }
-        .navigationTitle("PDFDeck")
-        .onAppear(perform: installKeyMonitor)
-        .onDisappear { if let m = keyMonitor { NSEvent.removeMonitor(m) } }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(WindowAccessor { window = $0 })
+        .onAppear(perform: setup)
+        .onDisappear(perform: teardown)
+        .onChange(of: model.fullscreen) { _, on in applyFullscreen(on) }
     }
 
     private var pageColumn: some View {
         ZStack {
+            (model.chromeHidden ? Color.black : Color(nsColor: .textBackgroundColor))
+                .ignoresSafeArea()
             PDFViewWrapper(pdfView: model.pdfView)
-            if model.selectedID == nil {
+            if model.selectedID == nil && !model.chromeHidden {
                 ContentUnavailableView("No PDF selected",
                                        systemImage: "doc.richtext",
-                                       description: Text("↑/↓ navigate · → into slides · ← collapse"))
+                                       description: Text("1 single page · f hide panels · 2 fullscreen"))
             }
             if model.isLoading {
                 ProgressView().controlSize(.large).padding(20)
@@ -49,15 +68,54 @@ struct ContentView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
+    // MARK: Lifecycle
+
+    private func setup() {
+        installKeyMonitor()
+        // keep `fullscreen` in sync if the user toggles native fullscreen another way
+        let nc = NotificationCenter.default
+        fsObservers = [
+            nc.addObserver(forName: NSWindow.didEnterFullScreenNotification, object: nil, queue: .main) { _ in
+                MainActor.assumeIsolated { AppModel.shared.fullscreen = true }
+            },
+            nc.addObserver(forName: NSWindow.didExitFullScreenNotification, object: nil, queue: .main) { _ in
+                MainActor.assumeIsolated { AppModel.shared.fullscreen = false }
+            },
+        ]
+    }
+
+    private func teardown() {
+        if let m = keyMonitor { NSEvent.removeMonitor(m); keyMonitor = nil }
+        fsObservers.forEach(NotificationCenter.default.removeObserver)
+        fsObservers = []
+    }
+
+    private func applyFullscreen(_ on: Bool) {
+        guard let win = window ?? NSApp.keyWindow ?? NSApp.mainWindow else { return }
+        win.collectionBehavior.insert(.fullScreenPrimary)
+        if win.styleMask.contains(.fullScreen) != on { win.toggleFullScreen(nil) }
+    }
+
+    // MARK: Keyboard — all single-key (no modifiers)
+
     private func installKeyMonitor() {
         guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            // let text fields (e.g. the Rename dialog) receive typing/caret keys
+            if let tv = NSApp.keyWindow?.firstResponder as? NSTextView, tv.isFieldEditor { return event }
             if event.modifierFlags.contains(.command) { return event }
             switch event.keyCode {
-            case 123: model.arrowLeft();  return nil   // ←
-            case 124: model.arrowRight(); return nil   // →
-            case 126: model.arrowUp();    return nil   // ↑
-            case 125: model.arrowDown();  return nil   // ↓
+            case 3:   model.toggleChrome();     return nil            // f  — hide sidebar + thumbnails
+            case 18:  model.showSinglePage();   return nil            // 1  — single page
+            case 19:  model.toggleFullscreen(); return nil            // 2  — native fullscreen
+            case 53:  return model.escape() ? nil : event             // esc — unwind fullscreen / panels
+            case 123: model.arrowLeft();  return nil                  // ←
+            case 124: model.arrowRight(); return nil                  // →
+            case 126: model.arrowUp();    return nil                  // ↑
+            case 125: model.arrowDown();  return nil                  // ↓
+            case 24, 69:  model.zoomIn();  return nil                 // = / keypad+
+            case 27, 78:  model.zoomOut(); return nil                 // - / keypad-
+            case 29, 82:  model.zoomFit(); return nil                 // 0 / keypad0
             default: return event
             }
         }

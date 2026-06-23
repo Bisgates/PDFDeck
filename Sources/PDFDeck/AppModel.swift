@@ -32,7 +32,7 @@ final class AppModel: ObservableObject {
 
     let pdfView: PDFView = {
         let v = PDFView()
-        v.displayMode = .singlePage
+        v.displayMode = .singlePage             // one page at a time (no continuous scroll)
         v.displaysPageBreaks = false
         v.autoScales = true
         v.interpolationQuality = .high
@@ -50,6 +50,8 @@ final class AppModel: ObservableObject {
     @Published var currentPage: Int = 0
     @Published var pageCount: Int = 0
     @Published var isLoading: Bool = false
+    @Published var chromeHidden: Bool = false        // f — hide sidebar + thumbnails
+    @Published var fullscreen: Bool = false          // 2 — native macOS fullscreen
 
     @Published var focusZone: FocusZone = .sidebar
     @Published var sidebarTarget: SidebarTarget?
@@ -290,6 +292,18 @@ final class AppModel: ObservableObject {
     func zoomOut()   { if pdfView.canZoomOut { pdfView.zoomOut(nil) } }
     func zoomFit()   { pdfView.autoScales = true }
     func zoomActual() { pdfView.autoScales = false; pdfView.scaleFactor = 1.0 }
+
+    // MARK: - View modes
+
+    func toggleChrome()     { chromeHidden.toggle(); if chromeHidden { focusZone = .slides } }   // f
+    func toggleFullscreen() { fullscreen.toggle();   if fullscreen   { focusZone = .slides } }   // 2
+    func showSinglePage()   { pdfView.displayMode = .singlePage; pdfView.autoScales = true }     // 1
+    /// esc: unwind fullscreen, then panel-hiding. Returns true if it consumed the key.
+    func escape() -> Bool {
+        if fullscreen   { fullscreen = false; return true }
+        if chromeHidden { chromeHidden = false; return true }
+        return false
+    }
     func goToPage(_ i: Int) {
         guard let p = document?.page(at: i) else { return }
         pdfView.go(to: p)

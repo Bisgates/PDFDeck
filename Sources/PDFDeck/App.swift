@@ -13,6 +13,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AppModel.shared.openExternal(urls)
     }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+    // Reopening (Dock click / `open`) focuses the existing window instead of spawning a new one.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag { sender.windows.first?.makeKeyAndOrderFront(nil) }
+        return false
+    }
 }
 
 @main
@@ -21,7 +26,7 @@ struct PDFDeckApp: App {
     @StateObject private var model = AppModel.shared
 
     var body: some Scene {
-        WindowGroup {
+        Window("PDFDeck", id: "main") {     // single-instance window (no duplicates/restored copies)
             ContentView()
                 .environmentObject(model)
                 .frame(minWidth: 900, minHeight: 600)
