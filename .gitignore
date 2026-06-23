@@ -1,0 +1,6 @@
+.DS_Store
+.build/
+*.app/
+AppIcon.iconset/
+icon_master.png
+*.xcodeproj
