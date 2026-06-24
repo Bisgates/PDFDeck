@@ -53,7 +53,7 @@ struct ThumbnailList: View {
                                           isCurrent: i == model.currentPage,
                                           zoneActive: model.focusZone == .slides,
                                           cache: model.thumbs,
-                                          fileKey: model.selectedID ?? "") {
+                                          gen: model.docToken) {
                                 model.clickThumb(i)
                             }
                             .id(i)
@@ -82,7 +82,7 @@ private struct PageThumbCell: View {
     let isCurrent: Bool
     let zoneActive: Bool
     let cache: ThumbCache
-    let fileKey: String
+    let gen: Int
     let onTap: () -> Void
 
     @State private var image: NSImage?
@@ -125,7 +125,7 @@ private struct PageThumbCell: View {
         .background(cardFill, in: RoundedRectangle(cornerRadius: 11))
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
-        .task(id: "\(fileKey)#\(index)") {
+        .task(id: "\(gen)#\(index)") {
             image = await cache.image(doc: doc, page: index, width: width * 2)  // 2x for Retina
         }
     }

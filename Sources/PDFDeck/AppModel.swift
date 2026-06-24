@@ -47,6 +47,7 @@ final class AppModel: ObservableObject {
     @Published var looseEntries: [PDFEntry] = []     // externally-opened PDFs, shown at top level
     @Published var selectedID: PDFEntry.ID?
     @Published var document: PDFDocument?
+    @Published var docToken: Int = 0          // bumps each time `document` is (re)assigned; keys thumbnail tasks
     @Published var currentPage: Int = 0
     @Published var pageCount: Int = 0
     @Published var isLoading: Bool = false
@@ -257,7 +258,7 @@ final class AppModel: ObservableObject {
 
     private func loadSelected() {
         guard let id = selectedID, let entry = orderedEntries.first(where: { $0.id == id }) else {
-            document = nil; pdfView.document = nil; pageCount = 0; currentPage = 0; return
+            document = nil; docToken += 1; pdfView.document = nil; pageCount = 0; currentPage = 0; return
         }
         loadToken += 1
         let token = loadToken
@@ -271,6 +272,7 @@ final class AppModel: ObservableObject {
                 self.isLoading = false
                 self.thumbs.reset()           // drop previous document's thumbnails
                 self.document = doc
+                self.docToken += 1            // force thumbnail tasks to re-run against the new doc
                 self.pdfView.document = doc
                 self.pdfView.autoScales = true   // new file resets to fit-window
                 self.pageCount = doc?.pageCount ?? 0
